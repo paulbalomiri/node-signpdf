@@ -1,10 +1,19 @@
 import SignPdfError from '../SignPdfError';
-const getSubstringIndex = (str, substring, n) => {
-    var times = 0, index = null;
+
+/**
+ * extract the n'th `\ByteRange` start marker including the 
+ * @param {Buffer} pdf 
+ * @param {Integer} n 
+ */
+const getByteRangePos = (pdf, n) => {
+    var times = 0, index = null, bracket_index = null;
 
     while (times < n && index !== -1) {
-        index = str.indexOf(substring, index+1);
-        times++;
+        index = pdf.indexOf('/ByteRange', index+1);
+        bracket_index=pdf.indexOf("[" , ("/ByteRange".length)+ index);
+        if ( index + "/ByteRange".length + 2  >= bracket_index) {
+            times++;
+        } 
     }
 
     return index;
@@ -27,7 +36,7 @@ const extractSignature = (pdf, signatureCount = 1) => {
     }
 
     // const byteRangePos = pdf.indexOf('/ByteRange [');
-    const byteRangePos = getSubstringIndex(pdf, '/ByteRange [', signatureCount);
+    const byteRangePos = getByteRangePos(pdf, signatureCount);
     if (byteRangePos === -1) {
         throw new SignPdfError(
             'Failed to locate ByteRange.',
@@ -44,7 +53,8 @@ const extractSignature = (pdf, signatureCount = 1) => {
     }
 
     const byteRange = pdf.slice(byteRangePos, byteRangeEnd + 1).toString();
-    const matches = (/\/ByteRange \[(\d+) +(\d+) +(\d+) +(\d+) *\]/).exec(byteRange);
+    console.log(byteRange);
+    const matches = (/\/ByteRange ?\[ *(\d+) +(\d+) +(\d+) +(\d+) *\]/).exec(byteRange);
     if (matches === null) {
         throw new SignPdfError(
             'Failed to parse the ByteRange.',

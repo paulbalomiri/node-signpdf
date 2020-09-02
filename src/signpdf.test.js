@@ -144,6 +144,11 @@ describe('Test signing', () => {
         expect(signature1).not.toBe(signature2);
         expect(signature1).toHaveLength(signature2.length);
     });
+    it('reads an externally generated signature', async () => {
+        const pdfBuffer = fs.readFileSync(`${__dirname}/../resources/hellosign_signed.pdf`)
+        let signature = signer.extractSignature(pdfBuffer)
+        expect(signature.signature.length != null).toBe(true)
+    });
     it('signs a ready pdf', async () => {
         const p12Buffer = fs.readFileSync(`${__dirname}/../resources/certificate.p12`);
         let pdfBuffer = fs.readFileSync(`${__dirname}/../resources/w3dummy.pdf`);

@@ -22,10 +22,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const DEFAULT_BYTE_RANGE_PLACEHOLDER = '**********';
 exports.DEFAULT_BYTE_RANGE_PLACEHOLDER = DEFAULT_BYTE_RANGE_PLACEHOLDER;
 
+const isBufferGuard = (buffer, message) => {
+  if (!(buffer instanceof Buffer)) {
+    throw new _SignPdfError.default(message, _SignPdfError.default.TYPE_INPUT);
+  }
+};
+
 class SignPdf {
   constructor() {
     this.byteRangePlaceholder = DEFAULT_BYTE_RANGE_PLACEHOLDER;
     this.lastSignature = null;
+  }
+
+  extractSignature(pdfBuffer, additionalOptions = {}) {
+    isBufferGuard(pdfBuffer, 'PDF expected as Buffer.');
+    signature = (0, _helpers.extractSignature)(pdfBuffer);
+    return signature;
   }
 
   sign(pdfBuffer, p12Buffer, additionalOptions = {}) {
@@ -34,15 +46,8 @@ class SignPdf {
       passphrase: '',
       ...additionalOptions
     };
-
-    if (!(pdfBuffer instanceof Buffer)) {
-      throw new _SignPdfError.default('PDF expected as Buffer.', _SignPdfError.default.TYPE_INPUT);
-    }
-
-    if (!(p12Buffer instanceof Buffer)) {
-      throw new _SignPdfError.default('p12 certificate expected as Buffer.', _SignPdfError.default.TYPE_INPUT);
-    }
-
+    isBufferGuard(pdfBuffer, 'PDF expected as Buffer.');
+    isBufferGuard(p12Buffer, 'p12 certificate expected as Buffer.');
     let pdf = (0, _helpers.removeTrailingNewLine)(pdfBuffer); // Find the ByteRange placeholder.
 
     const byteRangePlaceholder = [0, `/${this.byteRangePlaceholder}`, `/${this.byteRangePlaceholder}`, `/${this.byteRangePlaceholder}`];

@@ -1,17 +1,32 @@
 import forge from 'node-forge';
 import SignPdfError from './SignPdfError';
-import {removeTrailingNewLine} from './helpers';
+import {removeTrailingNewLine, extractSignature} from './helpers';
 
 export {default as SignPdfError} from './SignPdfError';
 
 export const DEFAULT_BYTE_RANGE_PLACEHOLDER = '**********';
 
+const isBufferGuard = (buffer, message) => {
+    if (!(buffer instanceof Buffer)) {
+        throw new SignPdfError(
+            message,
+            SignPdfError.TYPE_INPUT,
+        );
+    }
+}
 export class SignPdf {
     constructor() {
         this.byteRangePlaceholder = DEFAULT_BYTE_RANGE_PLACEHOLDER;
         this.lastSignature = null;
     }
-
+    extractSignature (
+        pdfBuffer,
+        additionalOptions = {}
+    ) {
+        isBufferGuard(pdfBuffer, 'PDF expected as Buffer.')
+        let signature = extractSignature(pdfBuffer)
+        return signature
+    }
     sign(
         pdfBuffer,
         p12Buffer,
@@ -22,19 +37,8 @@ export class SignPdf {
             passphrase: '',
             ...additionalOptions,
         };
-
-        if (!(pdfBuffer instanceof Buffer)) {
-            throw new SignPdfError(
-                'PDF expected as Buffer.',
-                SignPdfError.TYPE_INPUT,
-            );
-        }
-        if (!(p12Buffer instanceof Buffer)) {
-            throw new SignPdfError(
-                'p12 certificate expected as Buffer.',
-                SignPdfError.TYPE_INPUT,
-            );
-        }
+        isBufferGuard(pdfBuffer,'PDF expected as Buffer.' )
+        isBufferGuard(p12Buffer,'p12 certificate expected as Buffer.' )
 
         let pdf = removeTrailingNewLine(pdfBuffer);
 
